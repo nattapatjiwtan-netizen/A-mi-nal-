@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมจับคู่การตอบสนองของสัตว์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Kanit', sans-serif; }
+        .card-flip {
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        .card-flip.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        .matched {
+            opacity: 0.8;
+            pointer-events: none;
+            transform: scale(0.95);
+            filter: brightness(1.2) saturate(1.3);
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+        
+        .sparkle {
+            animation: sparkle 0.6s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 min-h-screen relative overflow-x-hidden">
+    <!-- Animated background elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full animate-pulse"></div>
+        <div class="absolute top-32 right-20 w-16 h-16 bg-yellow-300/20 rounded-full animate-bounce"></div>
+        <div class="absolute bottom-20 left-1/4 w-12 h-12 bg-pink-300/15 rounded-full animate-ping"></div>
+        <div class="absolute bottom-40 right-1/3 w-24 h-24 bg-blue-300/10 rounded-full animate-pulse"></div>
+    </div>
+    <!-- หน้าเกม -->
+    <div id="gameScreen" class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold text-white mb-4 drop-shadow-lg animate-pulse">
+                🐾 เกมจับคู่การตอบสนองของสัตว์ 🌟
+            </h1>
+            <p class="text-xl text-white/90 mb-6 drop-shadow-md">ค้นพบความมหัศจรรย์ของธรรมชาติ</p>
+            
+            <button onclick="startGame()" id="startBtn" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white px-12 py-4 rounded-2xl text-2xl font-bold transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-110 animate-bounce mb-8">
+                🎮 เริ่มเกม ✨
+            </button>
+            
+            <!-- Game Information Section -->
+            <div id="gameInfo" class="max-w-6xl mx-auto mb-8">
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <!-- เกี่ยวกับเกม -->
+                    <div class="bg-white/20 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/30">
+                        <div class="text-center mb-4">
+                            <div class="text-4xl mb-3">🎯</div>
+                            <h3 class="text-xl font-bold text-white mb-3">เกี่ยวกับเกม</h3>
+                        </div>
+                        <ul class="text-white/90 space-y-2 text-sm">
+                            <li class="flex items-start gap-2">
+                                <span class="text-yellow-300">🔸</span>
+                                <span>เกมจับคู่การตอบสนองของสัตว์ต่อสิ่งเร้าต่างๆ</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-yellow-300">🔸</span>
+                                <span>เรียนรู้พฤติกรรมธรรมชาติของสัตว์</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-yellow-300">🔸</span>
+                                <span>ฝึกความจำและสมาธิ</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-yellow-300">🔸</span>
+                                <span>เหมาะสำหรับทุกวัย</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- วิธีเล่นเกม -->
+                    <div class="bg-white/20 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/30">
+                        <div class="text-center mb-4">
+                            <div class="text-4xl mb-3">🎮</div>
+                            <h3 class="text-xl font-bold text-white mb-3">วิธีเล่นเกม</h3>
+                        </div>
+                        <ol class="text-white/90 space-y-2 text-sm">
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-300 font-bold">1.</span>
+                                <span>คลิกการ์ดเพื่อเปิดดู</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-300 font-bold">2.</span>
+                                <span>จับคู่สิ่งเร้ากับการตอบสนอง</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-300 font-bold">3.</span>
+                                <span>จับคู่ให้ครบทุกคู่ก่อนหมดเวลา</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-300 font-bold">4.</span>
+                                <span>ยิ่งเร็วยิ่งได้คะแนนมาก</span>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <!-- ประโยชน์ที่ได้รับ -->
+                    <div class="bg-white/20 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/30">
+                        <div class="text-center mb-4">
+                            <div class="text-4xl mb-3">🌟</div>
+                            <h3 class="text-xl font-bold text-white mb-3">ประโยชน์ที่ได้รับ</h3>
+                        </div>
+                        <ul class="text-white/90 space-y-2 text-sm">
+                            <li class="flex items-start gap-2">
+                                <span class="text-pink-300">✨</span>
+                                <span>เพิ่มความรู้เรื่องสัตว์และธรรมชาติ</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-pink-300">✨</span>
+                                <span>พัฒนาความจำและสมาธิ</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-pink-300">✨</span>
+                                <span>ฝึกการคิดวิเคราะห์</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-pink-300">✨</span>
+                                <span>สร้างความสนุกสนานในการเรียนรู้</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- ตัวอย่างการจับคู่ -->
+                <div class="bg-white/15 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 mb-8">
+                    <h3 class="text-2xl font-bold text-white text-center mb-6">🔍 ตัวอย่างการจับคู่</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-white/20 rounded-xl p-4 text-center">
+                            <div class="text-3xl mb-2">🌞</div>
+                            <div class="text-white font-semibold">สิ่งเร้า: แสงสว่าง</div>
+                        </div>
+                        <div class="bg-white/20 rounded-xl p-4 text-center">
+                            <div class="text-3xl mb-2">🦋</div>
+                            <div class="text-white font-semibold">การตอบสนอง: ผีเสื้อบินหาแสง</div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <div class="text-yellow-300 text-lg">↕️ จับคู่ให้ถูกต้อง ↕️</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center items-center gap-8 mb-6">
+                <div class="bg-white/25 backdrop-blur-md rounded-xl px-8 py-4 shadow-lg border border-white/20">
+                    <span class="text-white text-xl font-semibold drop-shadow-md">⏰ เวลา: <span id="timer" class="text-yellow-200">00:00</span></span>
+                </div>
+                <div class="bg-white/25 backdrop-blur-md rounded-xl px-8 py-4 shadow-lg border border-white/20">
+                    <span class="text-white text-xl font-semibold drop-shadow-md">🎯 คะแนน: <span id="score" class="text-green-200">0</span></span>
+                </div>
+                <button onclick="showAdminLogin()" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    👨‍💼 ผู้ดูแล
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Game Board -->
+        <div id="gameBoard" class="grid grid-cols-4 gap-4 max-w-4xl mx-auto hidden">
+            <!-- Cards will be generated here -->
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="gameOverModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden">
+            <div class="bg-gradient-to-br from-white to-blue-50 rounded-2xl p-10 text-center max-w-md mx-4 shadow-2xl border-2 border-blue-200 animate-bounce">
+                <h2 class="text-4xl font-bold bg-gradient-to-r from-green-500 to-blue-600 bg-clip-text text-transparent mb-6">🎉 เยี่ยมมาก! 🌟</h2>
+                <div class="space-y-3 mb-8">
+                    <p class="text-xl text-gray-700">⏰ เวลาที่ใช้: <span id="finalTime" class="font-bold text-blue-600"></span></p>
+                    <p class="text-xl text-gray-700">🎯 คะแนนรวม: <span id="finalScore" class="font-bold text-green-600"></span></p>
+                </div>
+                <button onclick="resetGame()" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    🔄 เล่นใหม่ ✨
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- หน้าล็อกอินผู้ดูแล -->
+    <div id="adminLoginScreen" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden">
+        <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-10 max-w-md mx-4 shadow-2xl border border-gray-200">
+            <h2 class="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">🔐 เข้าสู่ระบบผู้ดูแล</h2>
+            <input type="password" id="adminPassword" placeholder="กรุณาใส่รหัสผ่าน" 
+                   class="w-full px-6 py-4 border-2 border-gray-300 rounded-xl mb-6 text-center text-xl focus:border-blue-500 focus:outline-none transition-colors shadow-inner">
+            <div class="flex gap-4">
+                <button onclick="checkAdminPassword()" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl">
+                    เข้าสู่ระบบ
+                </button>
+                <button onclick="hideAdminLogin()" class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl">
+                    ยกเลิก
+                </button>
+            </div>
+            <div id="loginError" class="text-red-500 text-center mt-4 font-semibold hidden">❌ รหัสผ่านไม่ถูกต้อง</div>
+        </div>
+    </div>
+
+    <!-- หน้าผู้ดูแล -->
+    <div id="adminScreen" class="container mx-auto px-4 py-8 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-8 max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">⚙️ หน้าผู้ดูแลระบบ</h1>
+                <button onclick="exitAdmin()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+                    ออกจากระบบ
+                </button>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- การตั้งค่าเกม -->
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4">🎮 การตั้งค่าเกม</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">จำนวนคู่การ์ด</label>
+                            <select id="cardPairs" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="6">6 คู่ (ง่าย)</option>
+                                <option value="8" selected>8 คู่ (ปานกลาง)</option>
+                                <option value="10">10 คู่ (ยาก)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">เวลาจำกัด (วินาที)</label>
+                            <input type="number" id="timeLimit" value="90" min="60" max="600" 
+                                   class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">คะแนนต่อคู่</label>
+                            <input type="number" id="pointsPerPair" value="10" min="1" max="50" 
+                                   class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- สถิติเกม -->
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4">📊 สถิติเกม</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span>เกมที่เล่นทั้งหมด:</span>
+                            <span id="totalGames" class="font-semibold">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>เวลาเฉลี่ย:</span>
+                            <span id="avgTime" class="font-semibold">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>คะแนนสูงสุด:</span>
+                            <span id="highScore" class="font-semibold">0</span>
+                        </div>
+                        <button onclick="resetStats()" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg mt-4">
+                            รีเซ็ตสถิติ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- จัดการเนื้อหา -->
+                <div class="bg-gray-50 rounded-lg p-6 md:col-span-2">
+                    <h3 class="text-xl font-semibold mb-4">📝 จัดการคำถามและคำตอบ</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">เพิ่มสิ่งเร้า</label>
+                            <input type="text" id="newStimulus" placeholder="เช่น แสงสว่าง" 
+                                   class="w-full px-3 py-2 border rounded-lg mb-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">เพิ่มการตอบสนอง</label>
+                            <input type="text" id="newResponse" placeholder="เช่น ผีเสื้อบินหาแสง" 
+                                   class="w-full px-3 py-2 border rounded-lg mb-2">
+                        </div>
+                    </div>
+                    <button onclick="addNewPair()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                        เพิ่มคู่ใหม่
+                    </button>
+                    
+                    <div class="mt-6">
+                        <h4 class="font-semibold mb-3">คู่คำถาม-คำตอบปัจจุบัน:</h4>
+                        <div id="currentPairs" class="space-y-2 max-h-40 overflow-y-auto">
+                            <!-- Current pairs will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                <button onclick="saveSettings()" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold">
+                    💾 บันทึกการตั้งค่า
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        let gameData = [
+            { stimulus: "🦑 หมึกเปลี่ยนสี", response: "🎭 การพรางตัว" },
+            { stimulus: "🦌 กวางเงี่ยหู", response: "👂 ตอบสนองต่อเสียง" },
+            { stimulus: "🐦 นกบินหนี", response: "👁️ ตอบสนองต่อการมองเห็น" },
+            { stimulus: "🐸 กบกระโดด", response: "✋ ตอบสนองต่อการสัมผัส" },
+            { stimulus: "🐌 หอยปิดฝา", response: "📳 ตอบสนองต่อแรงสั่นสะเทือน" },
+            { stimulus: "🐻 หมีจำศีล", response: "🌡️ ตอบสนองต่ออุณหภูมิ" },
+            { stimulus: "🐠 ปลาว่ายหนี", response: "🏃 ตอบสนองต่อการเคลื่อนไหว" },
+            { stimulus: "🌞 แสงสว่าง", response: "🦋 ผีเสื้อบินหาแสง" },
+            { stimulus: "🔊 เสียงดัง", response: "🐰 กระต่ายหูตั้ง" },
+            { stimulus: "💧 น้ำ", response: "🐘 ช้างดื่มน้ำ" }
+        ];
+
+        let gameState = {
+            cards: [],
+            flippedCards: [],
+            matchedPairs: 0,
+            score: 0,
+            timeLeft: 90,
+            gameActive: false,
+            timer: null
+        };
+
+        let gameSettings = {
+            cardPairs: 8,
+            timeLimit: 90,
+            pointsPerPair: 10
+        };
+
+        let gameStats = {
+            totalGames: 0,
+            totalTime: 0,
+            highScore: 0
+        };
+
+        // Load saved data
+        function loadSavedData() {
+            const savedSettings = localStorage.getItem('animalGameSettings');
+            const savedStats = localStorage.getItem('animalGameStats');
+            const savedData = localStorage.getItem('animalGameData');
+            
+            if (savedSettings) {
+                gameSettings = JSON.parse(savedSettings);
+            }
+            if (savedStats) {
+                gameStats = JSON.parse(savedStats);
+            }
+            if (savedData) {
+                gameData = JSON.parse(savedData);
+            }
+        }
+
+        // Save data
+        function saveData() {
+            localStorage.setItem('animalGameSettings', JSON.stringify(gameSettings));
+            localStorage.setItem('animalGameStats', JSON.stringify(gameStats));
+            localStorage.setItem('animalGameData', JSON.stringify(gameData));
+        }
+
+        // Initialize game
+        function initGame() {
+            loadSavedData();
+            updateAdminDisplay();
+        }
+
+        // Start game
+        function startGame() {
+            gameState.timeLeft = gameSettings.timeLimit;
+            gameState.score = 0;
+            gameState.matchedPairs = 0;
+            gameState.gameActive = true;
+            gameState.flippedCards = [];
+            
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('gameInfo').style.display = 'none';
+            document.getElementById('gameBoard').classList.remove('hidden');
+            
+            createGameBoard();
+            startTimer();
+            updateDisplay();
+        }
+
+        // Create game board
+        function createGameBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+            
+            // Select pairs based on settings
+            const selectedPairs = gameData.slice(0, gameSettings.cardPairs);
+            const cards = [];
+            
+            // Create card pairs
+            selectedPairs.forEach((pair, index) => {
+                cards.push({ id: index * 2, type: 'stimulus', content: pair.stimulus, pairId: index });
+                cards.push({ id: index * 2 + 1, type: 'response', content: pair.response, pairId: index });
+            });
+            
+            // Shuffle cards
+            gameState.cards = shuffleArray(cards);
+            
+            // Create card elements
+            gameState.cards.forEach(card => {
+                const cardElement = createCardElement(card);
+                board.appendChild(cardElement);
+            });
+        }
+
+        // Create card element
+        function createCardElement(card) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'relative h-36 cursor-pointer transform transition-all duration-300 hover:scale-105';
+            cardDiv.onclick = () => flipCard(card.id);
+            
+            cardDiv.innerHTML = `
+                <div class="card-flip w-full h-full" id="card-${card.id}">
+                    <div class="card-front bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg border-2 border-white/30">
+                        <span class="text-5xl animate-pulse">🎴</span>
+                    </div>
+                    <div class="card-back bg-gradient-to-br from-white to-blue-50 rounded-xl border-2 border-blue-200 flex items-center justify-center p-3 shadow-xl">
+                        <span class="text-sm font-semibold text-center text-gray-800 drop-shadow-sm">${card.content}</span>
+                    </div>
+                </div>
+            `;
+            
+            return cardDiv;
+        }
+
+        // Flip card
+        function flipCard(cardId) {
+            if (!gameState.gameActive || gameState.flippedCards.length >= 2) return;
+            
+            const card = gameState.cards.find(c => c.id === cardId);
+            if (!card || gameState.flippedCards.includes(cardId)) return;
+            
+            const cardElement = document.getElementById(`card-${cardId}`);
+            cardElement.classList.add('flipped');
+            gameState.flippedCards.push(cardId);
+            
+            if (gameState.flippedCards.length === 2) {
+                setTimeout(checkMatch, 1000);
+            }
+        }
+
+        // Check match
+        function checkMatch() {
+            const [id1, id2] = gameState.flippedCards;
+            const card1 = gameState.cards.find(c => c.id === id1);
+            const card2 = gameState.cards.find(c => c.id === id2);
+            
+            if (card1.pairId === card2.pairId) {
+                // Match found
+                document.getElementById(`card-${id1}`).parentElement.classList.add('matched');
+                document.getElementById(`card-${id2}`).parentElement.classList.add('matched');
+                
+                gameState.matchedPairs++;
+                gameState.score += gameSettings.pointsPerPair;
+                
+                if (gameState.matchedPairs === gameSettings.cardPairs) {
+                    endGame(true);
+                }
+            } else {
+                // No match
+                document.getElementById(`card-${id1}`).classList.remove('flipped');
+                document.getElementById(`card-${id2}`).classList.remove('flipped');
+            }
+            
+            gameState.flippedCards = [];
+            updateDisplay();
+        }
+
+        // Timer
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                updateDisplay();
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        // End game
+        function endGame(won) {
+            gameState.gameActive = false;
+            clearInterval(gameState.timer);
+            
+            // Update stats
+            gameStats.totalGames++;
+            gameStats.totalTime += (gameSettings.timeLimit - gameState.timeLeft);
+            if (gameState.score > gameStats.highScore) {
+                gameStats.highScore = gameState.score;
+            }
+            
+            saveData();
+            
+            document.getElementById('finalTime').textContent = formatTime(gameSettings.timeLimit - gameState.timeLeft);
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+
+        // Reset game
+        function resetGame() {
+            document.getElementById('gameOverModal').classList.add('hidden');
+            document.getElementById('gameBoard').classList.add('hidden');
+            document.getElementById('gameInfo').style.display = 'block';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            
+            gameState = {
+                cards: [],
+                flippedCards: [],
+                matchedPairs: 0,
+                score: 0,
+                timeLeft: gameSettings.timeLimit,
+                gameActive: false,
+                timer: null
+            };
+            
+            updateDisplay();
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('timer').textContent = formatTime(gameState.timeLeft);
+            document.getElementById('score').textContent = gameState.score;
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Admin functions
+        function showAdminLogin() {
+            document.getElementById('adminLoginScreen').classList.remove('hidden');
+            document.getElementById('adminPassword').focus();
+        }
+
+        function hideAdminLogin() {
+            document.getElementById('adminLoginScreen').classList.add('hidden');
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        function checkAdminPassword() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === '2550') {
+                hideAdminLogin();
+                showAdminScreen();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function showAdminScreen() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('adminScreen').classList.remove('hidden');
+            updateAdminDisplay();
+        }
+
+        function exitAdmin() {
+            document.getElementById('adminScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+        }
+
+        function updateAdminDisplay() {
+            // Update settings
+            document.getElementById('cardPairs').value = gameSettings.cardPairs;
+            document.getElementById('timeLimit').value = gameSettings.timeLimit;
+            document.getElementById('pointsPerPair').value = gameSettings.pointsPerPair;
+            
+            // Update stats
+            document.getElementById('totalGames').textContent = gameStats.totalGames;
+            document.getElementById('avgTime').textContent = gameStats.totalGames > 0 ? 
+                formatTime(Math.round(gameStats.totalTime / gameStats.totalGames)) : '-';
+            document.getElementById('highScore').textContent = gameStats.highScore;
+            
+            // Update current pairs
+            updateCurrentPairs();
+        }
+
+        function updateCurrentPairs() {
+            const container = document.getElementById('currentPairs');
+            container.innerHTML = '';
+            
+            gameData.forEach((pair, index) => {
+                const pairDiv = document.createElement('div');
+                pairDiv.className = 'flex justify-between items-center bg-white p-2 rounded border';
+                pairDiv.innerHTML = `
+                    <span class="flex-1">${pair.stimulus} ↔ ${pair.response}</span>
+                    <button onclick="removePair(${index})" class="text-red-500 hover:text-red-700 ml-2">🗑️</button>
+                `;
+                container.appendChild(pairDiv);
+            });
+        }
+
+        function addNewPair() {
+            const stimulus = document.getElementById('newStimulus').value.trim();
+            const response = document.getElementById('newResponse').value.trim();
+            
+            if (stimulus && response) {
+                gameData.push({ stimulus, response });
+                document.getElementById('newStimulus').value = '';
+                document.getElementById('newResponse').value = '';
+                updateCurrentPairs();
+                saveData();
+            }
+        }
+
+        function removePair(index) {
+            if (gameData.length > 6) { // Keep minimum 6 pairs
+                gameData.splice(index, 1);
+                updateCurrentPairs();
+                saveData();
+            }
+        }
+
+        function saveSettings() {
+            gameSettings.cardPairs = parseInt(document.getElementById('cardPairs').value);
+            gameSettings.timeLimit = parseInt(document.getElementById('timeLimit').value);
+            gameSettings.pointsPerPair = parseInt(document.getElementById('pointsPerPair').value);
+            
+            saveData();
+            alert('บันทึกการตั้งค่าเรียบร้อยแล้ว!');
+        }
+
+        function resetStats() {
+            if (confirm('คุณต้องการรีเซ็ตสถิติทั้งหมดหรือไม่?')) {
+                gameStats = { totalGames: 0, totalTime: 0, highScore: 0 };
+                saveData();
+                updateAdminDisplay();
+            }
+        }
+
+        // Enter key support for admin login
+        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAdminPassword();
+            }
+        });
+
+        // Initialize on load
+        initGame();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9718982dd5b69c8c',t:'MTc1NTU5NTQzMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
